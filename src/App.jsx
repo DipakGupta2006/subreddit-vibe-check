@@ -40,14 +40,18 @@ export default function App() {
     setData(null)
     setFilter('all')
     try {
+      // Use allorigins proxy to bypass CORS
       const redditUrl = `https://www.reddit.com/r/${subreddit}/hot.json?limit=50&raw_json=1`
       const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(redditUrl)}`
+      
       const res = await fetch(proxyUrl)
       if (!res.ok) throw new Error(`Could not reach Reddit. Try again.`)
+      
       const proxyData = await res.json()
       const json = JSON.parse(proxyData.contents)
-      if (!res.ok) throw new Error(`Subreddit "r/${subreddit}" not found or private.`)
-      const json = await res.json()
+      
+      if (json.error || !json.data) throw new Error(`Subreddit "r/${subreddit}" not found or private.`)
+      
       const posts = json.data.children
         .filter(p => !p.data.stickied)
         .slice(0, 50)
@@ -71,7 +75,6 @@ export default function App() {
       const avgScore = posts.reduce((a, b) => a + b.score, 0) / posts.length
       const overallCls = classifyScore(Math.round(avgScore))
 
-      // Score distribution for bar chart
       const dist = { '-5 to -3': 0, '-2 to -1': 0, '0': 0, '1 to 2': 0, '3 to 5': 0, '5+': 0 }
       posts.forEach(p => {
         if (p.score <= -3) dist['-5 to -3']++
@@ -113,7 +116,6 @@ export default function App() {
       </header>
 
       <main className="main">
-        {/* SEARCH */}
         <div className="search-section">
           <div className="search-label">Enter Subreddit</div>
           <div className="search-row">
@@ -138,10 +140,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* ERROR */}
         {error && <div className="error-box">⚠️ {error}</div>}
 
-        {/* LOADING */}
         {loading && (
           <div className="loading-state">
             <div className="spinner" />
@@ -149,10 +149,8 @@ export default function App() {
           </div>
         )}
 
-        {/* RESULTS */}
         {data && !loading && (
           <>
-            {/* STATS */}
             <div className="stats-grid">
               <div className="stat-card total">
                 <div className="stat-label">Posts Analyzed</div>
@@ -176,7 +174,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* VIBE BAR */}
             <div className="vibe-section">
               <div className="section-title">Overall Sentiment Distribution</div>
               <div className="vibe-bar-wrap">
@@ -186,7 +183,7 @@ export default function App() {
                   <div className="vibe-seg neg" style={{ width: `${data.neg / data.posts.length * 100}%` }} />
                 </div>
                 <div className="vibe-legend">
-                  {['pos', 'neu', 'neg'].map(cls => (
+                  {['pos','neu','neg'].map(cls => (
                     <div key={cls} className="legend-item">
                       <div className="legend-dot" style={{ background: cls === 'pos' ? COLORS.positive : cls === 'neg' ? COLORS.negative : COLORS.neutral }} />
                       <span style={{ color: 'var(--text2)' }}>{labelOf(cls)}: </span>
@@ -202,7 +199,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* CHARTS */}
             <div className="chart-row">
               <div className="chart-card">
                 <h3>Sentiment Breakdown</h3>
@@ -230,18 +226,17 @@ export default function App() {
                     <Tooltip
                       contentStyle={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)' }}
                     />
-                    <Bar dataKey="count" fill="var(--accent)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="count" fill="var(--accent)" radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            {/* POSTS */}
             <div className="posts-section">
               <div className="posts-header">
                 <h3>All Posts</h3>
                 <div className="filter-tabs">
-                  {['all', 'pos', 'neu', 'neg'].map(f => (
+                  {['all','pos','neu','neg'].map(f => (
                     <button key={f} className={`filter-tab ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
                       {f === 'all' ? 'All' : labelOf(f)}
                     </button>
@@ -268,7 +263,6 @@ export default function App() {
           </>
         )}
 
-        {/* EMPTY STATE */}
         {!data && !loading && !error && (
           <div className="empty-state">
             <div className="empty-icon">🔍</div>
@@ -280,3 +274,4 @@ export default function App() {
     </div>
   )
 }
+
