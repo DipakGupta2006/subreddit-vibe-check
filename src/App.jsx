@@ -40,10 +40,8 @@ export default function App() {
     setData(null)
     setFilter('all')
     try {
-      const redditUrl = `https://www.reddit.com/r/${subreddit}/hot.json?limit=50&raw_json=1`
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(redditUrl)}`
-
-      const res = await fetch(proxyUrl)
+      // Uses our own Vercel serverless function — no CORS issues
+      const res = await fetch(`/api/reddit?subreddit=${encodeURIComponent(subreddit)}`)
       if (!res.ok) throw new Error(`Could not reach Reddit. Try again.`)
 
       const json = await res.json()
