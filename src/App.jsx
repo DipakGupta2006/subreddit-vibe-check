@@ -40,18 +40,16 @@ export default function App() {
     setData(null)
     setFilter('all')
     try {
-      // Use allorigins proxy to bypass CORS
       const redditUrl = `https://www.reddit.com/r/${subreddit}/hot.json?limit=50&raw_json=1`
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(redditUrl)}`
-      
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(redditUrl)}`
+
       const res = await fetch(proxyUrl)
       if (!res.ok) throw new Error(`Could not reach Reddit. Try again.`)
-      
-      const proxyData = await res.json()
-      const json = JSON.parse(proxyData.contents)
-      
+
+      const json = await res.json()
+
       if (json.error || !json.data) throw new Error(`Subreddit "r/${subreddit}" not found or private.`)
-      
+
       const posts = json.data.children
         .filter(p => !p.data.stickied)
         .slice(0, 50)
@@ -274,4 +272,3 @@ export default function App() {
     </div>
   )
 }
-
