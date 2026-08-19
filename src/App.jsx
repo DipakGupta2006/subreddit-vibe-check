@@ -40,10 +40,12 @@ export default function App() {
     setData(null)
     setFilter('all')
     try {
-      const res = await fetch(
-        `https://www.reddit.com/r/${subreddit}/hot.json?limit=50`,
-        { headers: { 'Accept': 'application/json' } }
-      )
+      const redditUrl = `https://www.reddit.com/r/${subreddit}/hot.json?limit=50&raw_json=1`
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(redditUrl)}`
+      const res = await fetch(proxyUrl)
+      if (!res.ok) throw new Error(`Could not reach Reddit. Try again.`)
+      const proxyData = await res.json()
+      const json = JSON.parse(proxyData.contents)
       if (!res.ok) throw new Error(`Subreddit "r/${subreddit}" not found or private.`)
       const json = await res.json()
       const posts = json.data.children
@@ -184,7 +186,7 @@ export default function App() {
                   <div className="vibe-seg neg" style={{ width: `${data.neg / data.posts.length * 100}%` }} />
                 </div>
                 <div className="vibe-legend">
-                  {['pos','neu','neg'].map(cls => (
+                  {['pos', 'neu', 'neg'].map(cls => (
                     <div key={cls} className="legend-item">
                       <div className="legend-dot" style={{ background: cls === 'pos' ? COLORS.positive : cls === 'neg' ? COLORS.negative : COLORS.neutral }} />
                       <span style={{ color: 'var(--text2)' }}>{labelOf(cls)}: </span>
@@ -228,7 +230,7 @@ export default function App() {
                     <Tooltip
                       contentStyle={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)' }}
                     />
-                    <Bar dataKey="count" fill="var(--accent)" radius={[4,4,0,0]} />
+                    <Bar dataKey="count" fill="var(--accent)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -239,7 +241,7 @@ export default function App() {
               <div className="posts-header">
                 <h3>All Posts</h3>
                 <div className="filter-tabs">
-                  {['all','pos','neu','neg'].map(f => (
+                  {['all', 'pos', 'neu', 'neg'].map(f => (
                     <button key={f} className={`filter-tab ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
                       {f === 'all' ? 'All' : labelOf(f)}
                     </button>
